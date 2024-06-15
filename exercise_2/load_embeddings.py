@@ -110,7 +110,7 @@ get_embedding_for('How do I get a taxi in Boston?')
 
 
 # TODO Uncomment these function calls and run this code to load data
-#create_index()
-#load_questions()
+create_index()
+load_questions()
 
 

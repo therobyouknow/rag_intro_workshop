@@ -18,13 +18,59 @@ def inject_context_data(context):
     # Edit this system message
     system_message = f"""   
     
-    put your system message instruction here, your data will go below
+    You are 'Flat Earth Bot' and you will strongly argue the case for a flat earth based on
+    proofs that we will provide as context.
+
+    Your personality is dismissive and condescending.
+
+    Here are the relevant proofs:
     
     {context}
     
     """
 
     return system_message
+
+# We'll use this to embed the question for query
+def embed_chunk(text):
+
+    response = oa.embeddings.create(
+        input=text,
+        model="text-embedding-3-small"
+    )
+
+    print(response)
+
+    embedding = response.data[0].embedding
+
+    return embedding
+
+
+# This will be used to retrieve chunks from Pinecone
+# Default chunks to retrieve is 5
+def retrieve_chunks(query, no_of_chunks=5):
+
+    # The query is embedded before querying Pinecone
+    embedding = embed_chunk(query)
+
+    index = pc.Index('proofs')
+
+    response = index.query(
+        vector= embedding,
+        top_k=no_of_chunks,
+        include_metadata=True
+    )
+
+    retrieved_chunks = ""
+
+    for match in response['matches']:
+
+        retrieved_chunks += "________________________________\n"
+        retrieved_chunks += "EXCERPT\n"
+        retrieved_chunks += "-------\n"
+        retrieved_chunks += match['metadata']['chunk'] + '\n'
+
+    return retrieved_chunks
 
 
 def respond_to_question(question):
@@ -33,7 +79,7 @@ def respond_to_question(question):
     # TODO you will need to call the code you worte last time in this line
     # You could etihter do this by implementing your code within this class
     # Or calling it some other way, the choice is yours
-    context_data = x_call_your_code_to_retrieve_chunks
+    context_data = retrieve_chunks(question)
     system_message = inject_context_data(context_data)
 
     # Call the OpenAI API with your systems message and question
